@@ -853,7 +853,506 @@ addEventListener('keydown',e=>{
   else if(c==='KeyL'&&pl){e.preventDefault();pl.currentTime+=5}
 });
 
-/* ---------- start ---------- */
+/* ===== v3 ADD-ON: Spotify audio, YouTube links, guide notes, phone fixes ===== */
+const css2=document.createElement('style');
+css2.textContent=`#sp[hidden],#yt[hidden],#sp [hidden]{display:none!important}
+*{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#gc{height:calc(100dvh - 56px)}
+body.sp-on main{padding-bottom:96px}body.sp-on aside{padding-bottom:110px}body.sp-on #toast{bottom:104px}
+#sp{position:fixed;left:0;right:0;bottom:0;height:80px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr);align-items:center;gap:16px;padding:0 16px;background:#000;color:#fff;border-top:1px solid #282828;z-index:65}
+.sp-l{display:flex;align-items:center;gap:12px;min-width:0}
+.sp-art{width:56px;height:56px;border-radius:4px;flex:none;display:grid;place-items:center;font-size:24px;color:#fff}
+.sp-t{display:flex;flex-direction:column;min-width:0}
+.sp-t a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:#fff}.sp-t a:hover{text-decoration:underline}
+.sp-t small{color:#b3b3b3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-c{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.sp-btns{display:flex;align-items:center;gap:8px}
+#sp button{background:none;border:0;color:#b3b3b3;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;position:relative}
+#sp button:hover{color:#fff}#sp button.on{color:#1db954}
+#sp button.on::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:#1db954}
+#sp button[data-r="2"]::before{content:'1';position:absolute;top:3px;right:6px;font-size:9px;font-weight:700}
+#sp .sp-pp{background:#fff;color:#000}#sp .sp-pp:hover{color:#000;transform:scale(1.06)}
+.sp-bar{display:flex;align-items:center;gap:8px;width:100%;max-width:640px;font-size:11px;color:#b3b3b3}
+.sp-bar span{width:38px;text-align:center}.sp-bar input{flex:1;min-width:0}
+.sp-r{display:flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0}
+#sp #spvol{width:96px;flex:none}
+#sp input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;margin:0;outline:none;cursor:pointer;background:linear-gradient(to right,#fff var(--p,0%),#4d4d4d var(--p,0%))}
+#sp input[type=range]:hover{background:linear-gradient(to right,#1db954 var(--p,0%),#4d4d4d var(--p,0%))}
+#sp input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;opacity:0}
+#sp input[type=range]:hover::-webkit-slider-thumb{opacity:1}
+#sp input[type=range]::-moz-range-track{background:transparent}
+#sp input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff;opacity:0}
+#sp input[type=range]:hover::-moz-range-thumb{opacity:1}
+@media(hover:none){#sp input[type=range]{height:6px}#sp input[type=range]::-webkit-slider-thumb{opacity:1}#sp input[type=range]::-moz-range-thumb{opacity:1}}
+.spw{background:linear-gradient(180deg,rgba(29,185,84,.35),transparent 340px);min-height:calc(100vh - 56px)}
+.sphd{display:flex;align-items:flex-end;gap:24px;padding:32px 24px 16px}
+.spcov{width:192px;height:192px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:80px;color:#fff;background:linear-gradient(135deg,#1db954,#0b3d20);box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.spmt{min-width:0}.spmt small{font-weight:600;font-size:12px}
+.spmt h1{font-size:clamp(28px,5vw,64px);line-height:1.1;font-weight:800;margin:6px 0 10px;overflow-wrap:anywhere}
+.spact{display:flex;align-items:center;gap:12px;padding:8px 24px 16px}
+.spplay{width:56px;height:56px;border-radius:50%;border:0;background:#1db954;color:#000;display:grid;place-items:center;flex:none;transition:transform .1s}
+.spplay:hover{background:#1ed760;transform:scale(1.05)}.spplay svg{width:28px;height:28px}
+.spic{position:relative;background:none;border:0;width:40px;height:40px;border-radius:50%;color:var(--dim);display:grid;place-items:center}
+.spic:hover{color:var(--text)}.spic.on{color:#1db954}
+.spic.on::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:#1db954}
+.spic[data-r="2"]::before{content:'1';position:absolute;top:4px;right:8px;font-size:9px;font-weight:700}
+.sphead,.trk{display:grid;grid-template-columns:40px minmax(0,1fr) 64px 36px;align-items:center;gap:12px;padding:0 24px}
+.sphead{height:36px;margin:0 8px;border-bottom:1px solid var(--line);color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.sphead span:first-child{text-align:center}.sphead span:nth-child(3),.trk .td{text-align:right}
+.trk{height:56px;margin:0 8px;border-radius:6px;cursor:pointer}.trk:hover{background:var(--bg3)}
+.tn{display:grid;place-items:center;color:var(--dim)}.tn .pl,.tn .eq{display:none}.tn .pl svg{width:16px;height:16px}
+@media(hover:hover){.trk:hover .tn b{display:none}.trk:hover .tn .pl{display:block}}
+.trk.on .tn b,.trk.on .tn .pl{display:none!important}.trk.on .tn .eq{display:flex}
+.eq{gap:2px;align-items:flex-end;height:14px}
+.eq span{width:3px;height:100%;background:#1db954;animation:eqa .9s infinite ease-in-out}
+.eq span:nth-child(2){animation-delay:.25s}.eq span:nth-child(3){animation-delay:.5s}
+.trk.pau .eq span{animation-play-state:paused}
+@keyframes eqa{0%,100%{height:25%}50%{height:100%}}
+.tt{display:flex;align-items:center;gap:12px;min-width:0}
+.ta{width:40px;height:40px;border-radius:4px;flex:none;display:grid;place-items:center;color:rgba(255,255,255,.85)}
+.tx{display:flex;flex-direction:column;min-width:0}
+.tx b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.trk.on .tx b{color:#1db954}
+.tx small{color:var(--dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trk .td{color:var(--dim);font-size:13px}
+.trk .tm{color:var(--dim);text-align:center;font-size:18px;line-height:36px;border-radius:50%}.trk .tm:hover{background:var(--hover);color:var(--text)}
+.sphero{display:flex;gap:24px;align-items:flex-end;padding:24px;background:linear-gradient(180deg,rgba(29,185,84,.3),transparent);border-radius:12px;margin-bottom:12px}
+.spart2{width:160px;height:160px;border-radius:6px;display:grid;place-items:center;font-size:64px;color:#fff;flex:none;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.sphero small{font-weight:600;font-size:12px}
+.sphero h2{font-size:clamp(24px,4vw,44px);line-height:1.1;margin:6px 0 14px;overflow-wrap:anywhere}
+.sprow{display:flex;gap:16px;align-items:center}.spback{color:var(--dim)}
+#yt{position:fixed;right:16px;bottom:16px;width:340px;max-width:calc(100vw - 24px);background:var(--bg2);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.55);z-index:71;overflow:hidden;transition:width .15s}
+#yt.big{width:min(760px,calc(100vw - 24px))}
+#ytv iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+#yt.min #ytv{height:0;overflow:hidden}#yt.min .mpa{display:none}
+#yt .mpa a{flex:none;display:grid;place-items:center;width:38px;height:32px;border-radius:20px;background:var(--bg3);color:var(--text)}
+.ytp{max-width:1100px;margin:0 auto;padding:24px}.ytp h2{font-size:24px}
+.ytp h3.sub{margin:28px 0 12px;font-size:18px}.ytp h3.sub a{font-size:13px;font-weight:400;margin-left:8px}
+.ytp .grid{padding:0}
+.ytf{display:flex;gap:8px;margin:16px 0}
+.ytf input{flex:1;min-width:0;height:44px;padding:0 18px;border-radius:40px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:16px;outline:none}
+.ytf input:focus{border-color:var(--blue)}
+.ytf button{height:44px;border:0;border-radius:40px;padding:0 18px;background:var(--bg3);font-weight:500}
+.ytf .go{background:var(--red);color:#fff}.ynl{color:var(--blue)}
+@media(max-width:900px){body:not(.closed) main::before{content:'';position:fixed;inset:56px 0 0 240px;background:rgba(0,0,0,.45);z-index:35}}
+@media(max-width:700px){
+.grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px 12px;padding:8px 12px 32px}
+.chips{padding:10px 12px}.watch{padding:12px}.mbar{padding:12px 12px 0}.mh{padding:8px 12px 0}.sres{padding:12px}.ytp{padding:16px 12px}
+.ti{font-size:20px}.pill,.seg button,.create{height:40px}
+.ed textarea{font-size:16px}
+.tagin,.mdesc,.gt input:not([type=checkbox]),.pkh input,.sb input{font-size:16px}
+.sb input{padding:0 12px}.sbtn{width:48px}.sug{right:48px}.row .rt{width:128px}
+.gp{left:12px;right:12px;top:auto;bottom:12px;width:auto;max-height:55vh;overflow:auto}body.sp-on .gp{bottom:104px}
+.ytf{flex-wrap:wrap}.ytf input{flex:1 1 100%}
+#yt,#yt.big{left:8px;right:8px;bottom:8px;width:auto}body.yt-on #toast{bottom:auto;top:70px}
+.sphd{flex-direction:column;align-items:flex-start;gap:14px;padding:20px 12px 8px}
+.spcov{width:132px;height:132px;font-size:56px}.spact{padding:8px 12px 12px}
+.sphead,.trk{padding:0 8px;gap:8px;grid-template-columns:32px minmax(0,1fr) 52px 32px}.trk{margin:0 4px}.sphead{margin:0 4px}
+.sphero{flex-direction:column;align-items:flex-start;padding:16px}.spart2{width:120px;height:120px;font-size:48px}
+#sp{height:auto;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"l r c" "b b b";gap:0 4px;padding:8px 12px}
+.sp-c{display:contents}.sp-l{grid-area:l}.sp-r{grid-area:r}.sp-btns{grid-area:c}.sp-bar{grid-area:b;max-width:none}
+.sp-art{width:40px;height:40px;font-size:18px}
+#spsh,#sprp,#spx,.spv{display:none!important}}
+@media(max-width:480px){.logo{display:none}}`;
+document.head.appendChild(css2);
+
+const sv=(d,s=20)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor"><path d="${d}"/></svg>`;
+const I={play:sv('M8 5v14l11-7z'),pause:sv('M6 19h4V5H6v14zm8-14v14h4V5h-4z'),next:sv('M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z'),prev:sv('M6 6h2v12H6zm3.5 6l8.5 6V6z'),
+ shuf:sv('M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z'),
+ rep:sv('M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z')};
+
+document.body.insertAdjacentHTML('beforeend',`<div id="sp" hidden>
+<div class="sp-l"><div class="sp-art" id="spart">♪</div><div class="sp-t"><a id="spti" href="#">-</a><small id="spsub"></small></div></div>
+<div class="sp-c"><div class="sp-btns"><button id="spsh" title="Shuffle">${I.shuf}</button><button id="spprev" title="Previous">${I.prev}</button><button id="sppp" class="sp-pp" title="Play / pause">${I.play}</button><button id="spnext" title="Next">${I.next}</button><button id="sprp" title="Repeat">${I.rep}</button></div>
+<div class="sp-bar"><span id="sptc">0:00</span><input type="range" id="spseek" min="0" max="1000" value="0"><span id="spdur"></span></div></div>
+<div class="sp-r"><button id="spts" title="Add timestamp to your note (Alt+T)">⏱</button><button id="spem" title="Add this song to your note">📎</button><span class="spv">🔊</span><input type="range" class="spv" id="spvol" min="0" max="100" value="100"><button id="spx" title="Close">✕</button></div></div>
+<div id="yt" hidden><div class="mph"><a id="ytt" href="#/links">YouTube</a><button id="ytm" title="Shrink / expand">▁</button><button id="yts" title="Bigger / smaller">⤢</button><button id="ytx" title="Close">✕</button></div>
+<div id="ytv"></div><div class="mpa" id="yta"><button id="ytts">⏱ Time</button><button id="ytin">📎 Insert</button><button id="ytnn">📝 New note</button><a id="ytop" href="#" target="_blank" rel="noopener" title="Open on YouTube">↗</a></div></div>`);
+
+/* ---------- Spotify-style audio ---------- */
+let sh=localStorage.spsh==='1',rp=+localStorage.sprp||0,queue=[],seeking=false,mkc='';
+const vol=$('#spvol'),seek=$('#spseek');
+vol.value=localStorage.spvol||100;vol.style.setProperty('--p',vol.value+'%');
+const audioList=()=>media.filter(m=>m.kind==='audio').sort((a,b)=>b.created-a.created);
+const hm=s=>{const h=Math.floor(s/3600),m=Math.max(1,Math.round(s%3600/60));return h?h+' hr '+m+' min':m+' min'};
+function curQueue(){queue=queue.filter(id=>mget(id));if(!cm||!queue.includes(cm.id))queue=audioList().map(m=>m.id);return queue}
+function nextId(dir){
+  const q=curQueue(),i=q.indexOf(cm.id);
+  if(sh&&q.length>1&&dir>0){let j;do{j=Math.floor(Math.random()*q.length)}while(j===i);return q[j]}
+  const j=i+dir;if(j>=0&&j<q.length)return q[j];
+  return rp===1?q[(j+q.length)%q.length]:null;
+}
+function spNext(auto){
+  if(!pl||!cm||cm.kind!=='audio')return;
+  if(auto&&rp===2){pl.currentTime=0;pl.play().catch(()=>{});return}
+  const id=nextId(1)||(auto?null:curQueue()[0]);
+  if(id)loadMedia(id,0,true);else if(auto){pl.currentTime=0;pl.pause();spUpd()}
+}
+function spPrev(){
+  if(!pl||!cm||cm.kind!=='audio')return;
+  if(pl.currentTime>3){pl.currentTime=0;return}
+  const q=curQueue(),i=q.indexOf(cm.id);
+  if(i>0)loadMedia(q[i-1],0,true);else pl.currentTime=0;
+}
+function playFrom(id,ids){
+  if(pl&&cm&&cm.id===id&&cm.kind==='audio'){pl.paused?pl.play():pl.pause();return}
+  queue=ids;loadMedia(id,0,true);
+}
+function spBtns(){
+  document.querySelectorAll('#spsh,#pgsh').forEach(b=>b.classList.toggle('on',sh));
+  document.querySelectorAll('#sprp,#pgrp').forEach(b=>{b.classList.toggle('on',rp>0);b.dataset.r=rp});
+}
+const togSh=()=>{sh=!sh;localStorage.spsh=sh?'1':'';spBtns()};
+const togRp=()=>{rp=(rp+1)%3;localStorage.sprp=rp;spBtns()};
+function mark(){
+  const on=!!(pl&&cm&&cm.kind==='audio'),playing=on&&!pl.paused;
+  document.querySelectorAll('.trk').forEach(r=>{const x=on&&r.dataset.id===cm.id;r.classList.toggle('on',x);r.classList.toggle('pau',x&&pl.paused)});
+  const a=$('#spall');if(a)a.innerHTML=playing?I.pause:I.play;
+  const b=$('#spbig');if(b)b.innerHTML=(playing&&cm.id===b.dataset.id)?I.pause:I.play;
+}
+function spUpd(){
+  if(!pl||!cm||cm.kind!=='audio')return;
+  const d=pl.duration||cm.dur||0,t=pl.currentTime||0;
+  $('#sppp').innerHTML=pl.paused?I.play:I.pause;
+  $('#sptc').textContent=fmt(t);$('#spdur').textContent=d?fmt(d):'';
+  if(!seeking){seek.value=d?Math.round(t/d*1000):0;seek.style.setProperty('--p',(d?t/d*100:0)+'%')}
+  const k=cm.id+(pl.paused?'p':'a');if(k!==mkc){mkc=k;mark()}
+}
+function spSync(){
+  const on=!!(pl&&cm&&cm.kind==='audio');
+  $('#sp').hidden=!on;document.body.classList.toggle('sp-on',on);
+  if(!on){mark();return}
+  $('#mp').hidden=true;
+  $('#spti').textContent=cm.name.replace(/\.\w+$/,'');$('#spti').href='#/media/'+cm.id;
+  $('#spsub').textContent=cm.tags.length?cm.tags.map(t=>'#'+t).join(' '):'Audio';
+  $('#spart').style.background=bg(cm);
+  const nt=cur.p==='note';$('#spts').hidden=!nt;$('#spem').hidden=!nt;
+  spBtns();spUpd();mark();
+}
+function session(){
+  if(!('mediaSession' in navigator))return;
+  const ms=navigator.mediaSession,h=(a,f)=>{try{ms.setActionHandler(a,f)}catch{}};
+  try{ms.metadata=new MediaMetadata({title:cm.name.replace(/\.\w+$/,''),artist:cm.tags.length?cm.tags.map(t=>'#'+t).join(' '):'My library',album:'Notes'})}catch{}
+  h('play',()=>pl&&pl.play());h('pause',()=>pl&&pl.pause());
+  h('previoustrack',spPrev);h('nexttrack',()=>spNext(false));
+  h('seekbackward',()=>{if(pl)pl.currentTime=Math.max(0,pl.currentTime-10)});
+  h('seekforward',()=>{if(pl)pl.currentTime+=10});
+  h('seekto',d=>{if(pl&&d.seekTime!=null)pl.currentTime=d.seekTime});
+}
+function hook(){
+  if(pl&&cm&&cm.kind==='audio'){
+    pl.controls=false;
+    if(!pl._sp){
+      pl._sp=1;pl.volume=vol.value/100;
+      ['play','pause','timeupdate','durationchange','loadedmetadata'].forEach(ev=>pl.addEventListener(ev,spUpd));
+      pl.addEventListener('ended',()=>spNext(true));
+    }
+    session();
+  }
+  spSync();
+}
+const _lm=loadMedia;
+loadMedia=async function(id,t,auto){ytClose();await _lm(id,t,auto);hook()};
+const _pl=place;place=function(){_pl();spSync()};
+
+$('#sppp').onclick=()=>{if(pl)pl.paused?pl.play():pl.pause()};
+$('#spprev').onclick=spPrev;$('#spnext').onclick=()=>spNext(false);
+$('#spsh').onclick=togSh;$('#sprp').onclick=togRp;
+seek.onpointerdown=()=>{seeking=true};seek.onpointerup=seek.onpointercancel=seek.onchange=()=>{seeking=false};
+seek.oninput=()=>{if(!pl||!cm)return;const d=pl.duration||cm.dur||0;if(d)pl.currentTime=seek.value/1000*d;seek.style.setProperty('--p',seek.value/10+'%')};
+vol.oninput=()=>{localStorage.spvol=vol.value;vol.style.setProperty('--p',vol.value+'%');if(pl)pl.volume=vol.value/100};
+$('#spts').onclick=()=>insTs();
+$('#spem').onclick=()=>{if(cm)insertEmbeds([cm])};
+$('#spx').onclick=()=>{killPlayer();place()};
+document.querySelector('.sp-r').onmousedown=e=>{if(e.target.type!=='range')e.preventDefault()};
+
+const trk=(m,i)=>`<div class="trk" data-id="${m.id}"><span class="tn"><b>${i+1}</b><i class="pl">${I.play}</i><i class="eq"><span></span><span></span><span></span></i></span><span class="tt"><span class="ta" style="background:${bg(m)}">♪</span><span class="tx"><b>${esc(m.name.replace(/\.\w+$/,''))}</b><small>${esc(m.tags.map(t=>'#'+t).join(' '))}${m.tags.length?' · ':''}${fsz(m.size)}</small></span></span><span class="td">${m.dur?fmt(m.dur):''}</span><a class="tm" href="#/media/${m.id}" title="Details, tags, notes">⋯</a></div>`;
+function viewAudio(tag){
+  const all=audioList(),list=tag?all.filter(m=>m.tags.includes(tag)):all,ids=list.map(m=>m.id);
+  const tc={};all.forEach(m=>m.tags.forEach(t=>tc[t]=(tc[t]||0)+1));
+  const secs=list.reduce((s,m)=>s+(m.dur||0),0);
+  document.title='Audio – Notes';
+  main.innerHTML=`<div class="spw"><div class="sphd"><div class="spcov">♪</div><div class="spmt"><small>${tag?'TAG':'LIBRARY'}</small><h1>${tag?'#'+esc(tag):'Your audio'}</h1><div class="dim">${list.length} song${list.length===1?'':'s'}${secs?' · '+hm(secs):''}</div></div></div>
+  <div class="spact"><button class="spplay" id="spall" title="Play">${I.play}</button><button class="spic" id="pgsh" title="Shuffle">${I.shuf}</button><button class="spic" id="pgrp" title="Repeat">${I.rep}</button><span style="flex:1"></span><button class="create" id="mup">⬆ Upload</button></div>
+  <div class="chips"><a class="chip${tag?'':' on'}" href="#/audio">All</a>${Object.entries(tc).sort((a,b)=>b[1]-a[1]).map(([t])=>`<a class="chip${tag===t?' on':''}" href="#/audio/${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
+  ${list.length?`<div class="sphead"><span>#</span><span>Title</span><span>Time</span><span></span></div><div id="sptr">${list.map(trk).join('')}</div>`:'<div class="empty"><h2>No audio yet</h2><p>Upload songs, or drag files anywhere on the page.</p><button id="mup2">⬆ Upload</button></div>'}</div>`;
+  const rows=$('#sptr');
+  if(rows)rows.onclick=e=>{if(e.target.closest('a'))return;const r=e.target.closest('.trk');if(r)playFrom(r.dataset.id,ids)};
+  $('#spall').onclick=()=>{
+    if(pl&&cm&&cm.kind==='audio'){pl.paused?pl.play():pl.pause();return}
+    if(!list.length)return;
+    queue=ids;loadMedia(sh?ids[Math.floor(Math.random()*ids.length)]:ids[0],0,true);
+  };
+  $('#pgsh').onclick=togSh;$('#pgrp').onclick=togRp;
+  main.querySelectorAll('#mup,#mup2').forEach(b=>b.onclick=async()=>{const f=await choose();if(f.length){await addFiles(f);go()}});
+  spBtns();mark();
+}
+const _vm=viewMedia;
+viewMedia=function(kind,tag){if(kind==='audio')viewAudio(tag);else _vm(kind,tag)};
+const _vmp=viewMediaPage;
+viewMediaPage=function(m){
+  _vmp(m);
+  if(m.kind!=='audio')return;
+  const box=main.querySelector('.pbox');if(!box)return;
+  box.hidden=true;
+  box.insertAdjacentHTML('beforebegin',`<div class="sphero"><div class="spart2" style="background:${bg(m)}">♪</div><div><small>SONG</small><h2>${esc(m.name.replace(/\.\w+$/,''))}</h2><div class="sprow"><button class="spplay" id="spbig" data-id="${m.id}"></button><a class="spback" href="#/audio">← All audio</a></div></div></div>`);
+  $('#spbig').onclick=()=>{if(pl&&cm&&cm.id===m.id)pl.paused?pl.play():pl.pause();else loadMedia(m.id,0,true)};
+  mark();
+};
+
+/* ---------- YouTube link reader ---------- */
+let ytCur=null,ytNow=0,ytGot=false,ytIv=0,ytS;
+try{ytS=JSON.parse(localStorage['notes.yt'])}catch{}
+if(!ytS||!Array.isArray(ytS.hist))ytS={hist:[],titles:{}};
+ytS.titles=ytS.titles||{};
+const ytSave=()=>{try{localStorage['notes.yt']=JSON.stringify(ytS)}catch{}};
+const ytKey=y=>y.id||('pl:'+y.list);
+const ytThumb=y=>y.id?`url(https://i.ytimg.com/vi/${y.id}/mqdefault.jpg) center/cover #000`:'linear-gradient(135deg,#f03,#600)';
+const ytUrl=(y,t)=>y.id?'https://youtu.be/'+y.id+(y.list?'?list='+y.list+(t?'&t='+t:''):(t?'?t='+t:'')):'https://www.youtube.com/playlist?list='+y.list;
+function ytTime(s){if(!s)return 0;if(/^\d+$/.test(s))return +s;const m=s.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);return m?(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0):0}
+function parseYT(u){
+  u=(u||'').trim();if(!u)return null;
+  if(!/^https?:\/\//i.test(u)&&/^(www\.|m\.|music\.)?(youtube\.com|youtu\.be)\//i.test(u))u='https://'+u;
+  let x;try{x=new URL(u)}catch{return null}
+  const h=x.hostname.replace(/^(www|m|music)\./,'');let id='',list=x.searchParams.get('list')||'';
+  if(h==='youtu.be')id=x.pathname.slice(1).split('/')[0];
+  else if(h==='youtube.com'||h==='youtube-nocookie.com'){
+    const p=x.pathname.split('/').filter(Boolean);
+    if(p[0]==='watch')id=x.searchParams.get('v')||'';
+    else if(['shorts','embed','live','v'].includes(p[0]))id=p[1]||'';
+  }else return null;
+  if(!/^[\w-]{11}$/.test(id))id='';
+  if(!/^[\w-]{10,}$/.test(list))list='';
+  if(!id&&!list)return null;
+  return{id,list,t:ytTime(x.searchParams.get('t')||x.searchParams.get('start')||(x.hash.match(/t=([^&]+)/)||[])[1]||'')};
+}
+function ytTitle(y){
+  const k=ytKey(y);if(ytS.titles[k])return Promise.resolve(ytS.titles[k]);
+  return fetch('https://www.youtube.com/oembed?format=json&url='+encodeURIComponent(ytUrl(y)))
+    .then(r=>r.ok?r.json():null)
+    .then(j=>{if(j&&j.title){ytS.titles[k]=j.title;ytSave()}return ytS.titles[k]||''})
+    .catch(()=>'');
+}
+function ytListen(){try{const f=$('#ytv iframe');if(f&&f.contentWindow)f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*')}catch{}}
+addEventListener('message',e=>{
+  if(!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(e.origin))return;
+  ytGot=true;let d;try{d=typeof e.data==='string'?JSON.parse(e.data):e.data}catch{return}
+  if(d&&d.event==='infoDelivery'&&d.info&&typeof d.info.currentTime==='number')ytNow=d.info.currentTime;
+});
+function ytClose(){clearInterval(ytIv);ytCur=null;$('#ytv').textContent='';$('#yt').hidden=true;document.body.classList.remove('yt-on')}
+function openYT(y,t){
+  if(!y)return toast("That doesn't look like a YouTube link");
+  if(pl){killPlayer();place()}
+  ytCur=y;ytNow=0;ytGot=false;
+  const k=ytKey(y),s0=(t==null?y.t:t)||0,https=/^https?:$/.test(location.protocol);
+  const f=document.createElement('iframe');
+  f.src='https://www.youtube-nocookie.com/embed/'+(y.id||'videoseries')+'?autoplay=1&playsinline=1&rel=0&enablejsapi=1'+(https?'&origin='+encodeURIComponent(location.origin):'')+(y.list?'&list='+y.list:'')+(s0?'&start='+s0:'');
+  f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.allowFullscreen=true;
+  f.referrerPolicy='strict-origin-when-cross-origin';f.title='YouTube video player';f.onload=ytListen;
+  $('#ytv').textContent='';$('#ytv').appendChild(f);
+  ytS.hist=[{id:y.id,list:y.list,t:s0,at:Date.now()},...ytS.hist.filter(h=>ytKey(h)!==k)].slice(0,30);ytSave();
+  const dock=$('#yt');dock.hidden=false;dock.classList.remove('min');
+  if(cur.p==='links')dock.classList.add('big');
+  document.body.classList.add('yt-on');
+  $('#ytt').textContent=ytS.titles[k]||'YouTube video';$('#ytop').href=ytUrl(y,s0);
+  ytTitle(y).then(ti=>{if(ti&&ytCur&&ytKey(ytCur)===k)$('#ytt').textContent=ti});
+  clearInterval(ytIv);let n=0;ytIv=setInterval(()=>{if(ytGot||!ytCur||++n>10)clearInterval(ytIv);else ytListen()},1200);
+}
+const own=s=>{const v=ta.value,p=ta.selectionStart;return(p>0&&v[p-1]!=='\n'?'\n':'')+s+'\n'};
+function insertYT(){
+  if(!ytCur)return;if(!onNote())return toast('Open a note first, then press Insert');
+  put(own(ytUrl(ytCur)),ta.selectionStart,ta.selectionEnd);toast('Video added to your note');
+}
+function insYtTs(){
+  if(!ytCur||!ytCur.id)return toast('Timestamps need a single video');
+  if(!onNote())return toast('Open a note first, then press the time button');
+  if(!ytNow)return toast('Could not read the time yet. Let it play a few seconds and try again');
+  put(own(ytUrl(ytCur,Math.floor(ytNow))),ta.selectionStart,ta.selectionEnd);toast('Timestamp added');
+}
+const _ts=insTs;insTs=function(){if(ytCur)insYtTs();else _ts()};
+$('#ytx').onclick=ytClose;
+$('#ytm').onclick=()=>$('#yt').classList.toggle('min');
+$('#yts').onclick=()=>{$('#yt').classList.remove('min');$('#yt').classList.toggle('big')};
+$('#yta').onmousedown=e=>{if(e.target.tagName!=='A')e.preventDefault()};
+$('#ytts').onclick=insYtTs;$('#ytin').onclick=insertYT;
+$('#ytnn').onclick=()=>{if(!ytCur)return;newNote(ytS.titles[ytKey(ytCur)]||'YouTube video',ytUrl(ytCur)+'\n\n## Notes\n- \n\n#youtube')};
+
+function ytCard(y,url){
+  return`<a class="mc yt" href="${esc(url)}" data-yt="${esc(y.id)}" data-list="${esc(y.list)}" data-t="${y.t||0}"><span class="mct" style="background:${ytThumb(y)}"><i>▶</i></span><span class="mci"><b>${esc(ytS.titles[ytKey(y)]||'YouTube video')}</b><small>YouTube${y.t?' · from '+fmt(y.t):''} · tap to play here</small></span></a>`;
+}
+const _in2=inline;
+inline=function(s){
+  const hold=[];
+  s=s.replace(/(^|\s)(https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)\/[^\s<>]+)/gi,(all,pre,url)=>{
+    const tail=(url.match(/[.,;:!?)\]]+$/)||[''])[0];url=url.slice(0,url.length-tail.length);
+    const y=parseYT(url);if(!y)return all;
+    hold.push(ytCard(y,url));return pre+'\u0002'+(hold.length-1)+'\u0002'+tail;
+  });
+  return _in2(s).replace(/\u0002(\d+)\u0002/g,(_,i)=>hold[i]);
+};
+document.addEventListener('click',e=>{
+  const nn=e.target.closest('[data-note]');if(nn){e.preventDefault();location.hash='#/note/'+nn.dataset.note;return}
+  const a=e.target.closest('a[data-yt]');if(!a)return;
+  e.preventDefault();openYT({id:a.dataset.yt,list:a.dataset.list||'',t:0},+a.dataset.t||0);
+});
+
+function viewLinks(){
+  document.title='YouTube links – Notes';
+  const found=[];
+  for(const n of notes){
+    const seen=new Set();
+    for(const m of n.body.matchAll(/https?:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be)\/[^\s<>]+/gi)){
+      const y=parseYT(m[0].replace(/[.,;:!?)\]]+$/,''));
+      if(y&&!seen.has(ytKey(y))){seen.add(ytKey(y));found.push({y,n})}
+    }
+  }
+  const hist=ytS.hist.slice(0,12);
+  const yc=(y,sub)=>`<a class="card" href="${esc(ytUrl(y,y.t))}" data-yt="${esc(y.id)}" data-list="${esc(y.list)}" data-t="${y.t||0}"><div class="th" style="background:${ytThumb(y)}"><span class="bd">▶ YouTube</span></div><div class="ci"><div class="av" style="background:#f03">▶</div><div><h3>${esc(ytS.titles[ytKey(y)]||'YouTube video')}</h3><div class="dim">${sub}</div></div></div></a>`;
+  main.innerHTML=`<div class="ytp"><h2>▶ YouTube links</h2><p class="dim">Paste a YouTube link. It plays right here and keeps playing while you write notes.</p>
+  <form class="ytf" id="ytf"><input id="yti" placeholder="Paste a YouTube link…" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="ytpaste">📋 Paste</button><button class="go">▶ Play</button></form>
+  ${hist.length?`<h3 class="sub">Recently played <a href="#" id="ytclr">Clear</a></h3><div class="grid">${hist.map(h=>yc(h,ago(h.at))).join('')}</div>`:''}
+  ${found.length?`<h3 class="sub">In your notes</h3><div class="grid">${found.slice(0,60).map(f=>yc(f.y,`<span class="ynl" data-note="${f.n.id}">📝 ${esc(f.n.title||'Untitled')}</span>`)).join('')}</div>`:''}
+  ${hist.length||found.length?'':'<div class="empty"><h2>No videos yet</h2><p>Paste a link above to start. Links you put in notes show up here too.</p></div>'}</div>`;
+  const inp=$('#yti');
+  const play=()=>{const y=parseYT(inp.value);if(!y)return toast("That doesn't look like a YouTube link");inp.value='';openYT(y);viewLinks()};
+  $('#ytf').onsubmit=e=>{e.preventDefault();play()};
+  inp.onpaste=()=>setTimeout(()=>{if(parseYT(inp.value))play()},30);
+  $('#ytpaste').onclick=async()=>{try{inp.value=(await navigator.clipboard.readText()).trim();play()}catch{toast('Long-press the box and choose Paste')}};
+  const c=$('#ytclr');if(c)c.onclick=e=>{e.preventDefault();ytS.hist=[];ytSave();viewLinks()};
+}
+
+/* ---------- hook into the app ---------- */
+const _g2=go;removeEventListener('hashchange',_g2);
+go=function(){
+  const p=location.hash.slice(2).split('/')[0];
+  if(p==='links'){
+    if(pl)mv(pl,$('#mpslot'));
+    cur={p,a:''};relFn=null;closeMenu();sug.style.display='none';gid++;scrollTo(0,0);renderSide();
+    viewLinks();place();
+  }else _g2();
+};
+addEventListener('hashchange',go);
+const _rs2=renderSide;
+renderSide=function(){
+  _rs2();const g=side.querySelector('a[href="#/graph"]');if(!g)return;
+  const gd=titleMap.get('guide');
+  g.insertAdjacentHTML('afterend',`<a class="si${cur.p==='links'?' on':''}" href="#/links"><span>📺</span>YouTube links</a>`+(gd?`<a class="si${cur.p==='note'&&cur.a===gd.id?' on':''}" href="#/note/${gd.id}"><span>📖</span>Guide</a>`:''));
+};
+const _sg3=sugg;
+sugg=function(){
+  const y=parseYT(qEl.value);
+  if(y){sug.innerHTML=`<a class="sg all" href="#" data-yt="${esc(y.id)}" data-list="${esc(y.list)}" data-t="${y.t||0}">▶ Play this YouTube link</a>`;sug.style.display='block';return}
+  _sg3();
+};
+const sf=$('#sf'),_sub=sf.onsubmit;
+sf.onsubmit=e=>{
+  const y=parseYT(qEl.value);
+  if(y){e.preventDefault();qEl.value='';sug.style.display='none';qEl.blur();openYT(y);return}
+  return _sub.call(sf,e);
+};
+(()=>{
+  const p=new URLSearchParams(location.search),raw=[p.get('yt'),p.get('url'),p.get('text')].find(Boolean);
+  if(!raw)return;const m=raw.match(/https?:\/\/\S+/i),y=parseYT(m?m[0]:raw);
+  if(y){setTimeout(()=>openYT(y),400);history.replaceState(null,'',location.pathname+location.hash)}
+})();
+
+/* ---------- phone tweaks ---------- */
+if(!localStorage.mode&&innerWidth<700)localStorage.mode='edit';
+main.addEventListener('click',()=>{if(innerWidth<=900)document.body.classList.add('closed')});
+
+/* ---------- guide notes (created once, delete any time) ---------- */
+if(!localStorage['notes.guide1']){
+  const G=(t,l,a)=>{const n=mk(t,l.join('\n'),a);idx(n);notes.push(n)};
+  G('Guide',['# Guide 📖','Everything in this app in plain words. Open a guide below. #guide','',
+   '- [[Guide: Graph view]] - move, color and decorate your note map',
+   '- [[Guide: Audio and video]] - your own songs and videos, Spotify style player',
+   '- [[Guide: YouTube links]] - paste a link and watch inside the app',
+   '- [[Guide: On your phone]] - Chrome and Brave tips','',
+   '## Basics',
+   '- Type `/` on a new line for blocks like headings, to-dos and code.',
+   '- Type `[[` to link to another note. Links show up as backlinks on the right.',
+   '- Put a hash sign in front of a word to make a tag. Click a tag to see every note with it.',
+   '- Search: press `/` anywhere (or Ctrl+K) and type any word.',
+   '- You can delete these guide notes whenever you like.'],0);
+  G('Guide: Graph view',['# Guide: Graph view 🕸️','Every note is a dot. Lines are links made with `[[Note title]]`. Open it from the sidebar. #guide','',
+   '## Move things around',
+   '- **Drag a dot** to move it. It stays where you drop it (it gets pinned).',
+   '- **Drag empty space** to pan around.',
+   '- **Scroll wheel** zooms. On a phone use the ＋ and － buttons at the top.',
+   '- **Double-click** a dot to open the note. On a phone tap the dot, then press **Open note** in the panel.','',
+   '## Make it yours',
+   'Click a dot and a panel opens:',
+   '- **Icon**: type any emoji and it shows inside the dot.',
+   '- **Color**: pick a swatch, or the color circle for any color. The arrow button goes back to default.',
+   '- **Picture**: choose an image from your device. It becomes a round picture. Remove takes it off.',
+   '- **Pin / Unpin**: pinned dots stay put, unpinned dots float again.','',
+   '## Toolbar',
+   '- **Filter**: type a word and only matching notes stay bright.',
+   '- **Tags**: shows tags as orange dots joined to their notes.',
+   '- **Labels**: hide or show the names under the dots.',
+   '- **Reset layout**: unpins everything and re-spreads it.','',
+   '## Tips',
+   '- Hover a dot (or select it) to light up everything connected to it.',
+   '- Notes with more links get bigger dots. Starred notes are gold.',
+   '- No lines? Link notes by typing `[[` inside a note.','','Back to [[Guide]]'],1000);
+  G('Guide: Audio and video',['# Guide: Audio and video 🎵🎬','Keep your own songs, recordings and videos here and play them while you write. #guide','',
+   '## Add files',
+   '- Open **Audio** or **Videos** in the sidebar and press **Upload**.',
+   '- Or drag files from your computer anywhere on the page.',
+   '- Dropping files onto an open note also puts them inside the note.',
+   '- mp3, wav, m4a, mp4, mov, webm and more. mp3 and mp4 work everywhere.','',
+   '## Play (Spotify style)',
+   '- The **Audio** page is a track list. Tap a song and the player bar appears at the bottom.',
+   '- Bar buttons: shuffle, previous, play or pause, next, repeat (press twice for repeat one), seek bar, volume.',
+   '- The next song plays by itself. The list you played from is the queue, so open a tag first to play only that tag.',
+   '- The ⋯ on a song opens its page: rename, tags, description, download, delete.',
+   '- Videos play in a small floating window. ⤢ makes it bigger, ✕ closes it.',
+   '- The player keeps going while you open notes and write.','',
+   '## Use in notes',
+   '- Press **🎞 Media** on a note to pick a file, or type `![[my-song.mp3]]`.',
+   '- While playing, press **⏱** (phone) or **Alt+T** (computer) to add a clickable timestamp like `[[my-song.mp3#1:23]]`. Click it later to jump there.',
+   '- Link without embedding using `[[my-song.mp3]]`.',
+   '- Renaming a file updates the links in your notes. Search also finds file names, tags and descriptions.','',
+   '## Shortcuts',
+   '- Alt+P play or pause, Alt+J back 5 seconds, Alt+L forward 5 seconds, Alt+T timestamp.','',
+   '## Good to know',
+   '- Files stay in this browser on this device only. They do not sync to your phone, and Export backup does not include them. Keep your originals.',
+   '- It remembers where you stopped in each file.','','Back to [[Guide]]'],2000);
+  G('Guide: YouTube links',['# Guide: YouTube links ▶','Paste a YouTube link and it plays inside the app while you keep writing. #guide','',
+   '## Play a link',
+   '- Open **YouTube links** in the sidebar, paste a link in the box and press **Play**. The 📋 button pastes from your clipboard.',
+   '- Or paste the link into the top search bar and press Enter.',
+   '- Works with normal links, youtu.be short links, Shorts, playlists and phone links. A time like `?t=90` starts at that second.','',
+   '## While it plays',
+   '- The video floats at the bottom. ⤢ makes it bigger, ▁ shrinks it to a thin bar, ✕ closes it.',
+   '- It keeps playing while you open notes, search and browse.',
+   '- **⏱ Time** adds a link to your note at the current moment. Click it later to jump there.',
+   '- **📎 Insert** adds the video to the note you have open.',
+   '- **📝 New note** makes a new note with the video inside.',
+   '- **↗** opens it on YouTube.','',
+   '## In notes',
+   '- Put a YouTube link on its own line in any note. In preview it becomes a card. Click the card to play it.',
+   '- Every video found in your notes is listed on the YouTube links page.','',
+   '## Good to know',
+   '- Needs internet. Some videos do not allow playing outside YouTube, use ↗ for those.',
+   '- Open the app from your website link, not from the file on your computer, or YouTube may refuse to play.',
+   '- Some browsers, Brave especially, block autoplay. Tap play on the video once if it does not start.','','Back to [[Guide]]'],3000);
+  G('Guide: On your phone',['# Guide: On your phone 📱','Works in Chrome, Brave and other phone browsers. #guide','',
+   '## Open it fast',
+   '- Open your site link, then use the browser menu and choose **Add to Home screen**. It opens like an app.','',
+   '## Tips',
+   '- Tap ☰ for the sidebar. Tap outside it to close it.',
+   '- Notes open in **Edit** mode. Tap **Preview** to see the formatted version.',
+   '- Type `/` on a new line for blocks and `[[` to link notes.',
+   '- Paste a YouTube link into the top search bar and press Enter to play it.',
+   '- The player stays at the bottom while you move around. Audio also gets lock-screen controls.',
+   '- Graph: drag dots, drag empty space to pan, use ＋ and － to zoom, tap a dot then **Open note**.','',
+   '## If something is odd',
+   '- Video will not start by itself? Tap play once.',
+   '- Sound stops when the screen locks? Check the battery saver settings for your browser.',
+   '- Notes and files live in this browser on this phone only. Use Export backup in the sidebar to copy your notes.','','Back to [[Guide]]'],4000);
+  localStorage['notes.guide1']='1';rebuild();flush();
+}
+  /* ---------- start ---------- */
 tx('meta','readonly',s=>s.getAll()).then(l=>{media=(l||[]).map(m=>(m.tags=m.tags||[],m));reindex()}).catch(()=>{}).then(()=>{renderSide();go()});
 })();
 </script>
